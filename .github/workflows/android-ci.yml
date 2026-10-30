@@ -31,6 +31,9 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # replaces the default "tools platform-tools", whose obsolete "tools" package no longer exists
+          packages: platforms;android-37.0
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
