@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">Sdílet univerzální odkaz</string>
     <string name="open">Otevřít</string>
     <string name="share">Sdílet</string>
-    <string name="song_cover">Kryt skladby</string>
     <string name="settings">Nastavení</string>
     <string name="back">Zpět</string>
     <string name="apps">Aplikace</string>
@@ -49,5 +48,4 @@
     <string name="error_server">Chyba serveru</string>
     <string name="error_timeout">Požadavek vypršel</string>
     <string name="retry">Opakovat</string>
-    <string name="country_code">Kód země</string>
 </resources>

@@ -41,8 +41,8 @@ import com.acszo.redomi.ui.page.bottom_sheet.components.SourceCard
 import com.acszo.redomi.utils.IntentUtil.onIntentView
 
 /**
- * The conversion sheet driven by [com.acszo.redomi.conversion.ConversionPlanner]. It keeps the
- * look and the settings of the old sheet but lists destinations instead of Songlink results.
+ * The conversion sheet driven by [com.acszo.redomi.conversion.ConversionPlanner]. It lists the
+ * destinations the link itself allows, with the apps and layout chosen in the settings.
  *
  * - ACTION_VIEW: choosing a destination opens it; a single real destination opens at once.
  * - ACTION_SEND: choosing a destination offers Open, Copy and Share for its URL.

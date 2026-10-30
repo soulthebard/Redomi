@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">Dijelite univerzalnu vezu</string>
     <string name="open">Otvori</string>
     <string name="share">Dijeli</string>
-    <string name="song_cover">Naslovnica pjesme</string>
     <string name="settings">Postavke</string>
     <string name="back">Nazad</string>
     <string name="apps">Aplikacije</string>
@@ -49,5 +48,4 @@
     <string name="error_server">Serverska greška</string>
     <string name="error_timeout">Request timed out</string>
     <string name="retry">Retry</string>
-    <string name="country_code">Country code</string>
 </resources>

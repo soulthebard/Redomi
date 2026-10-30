@@ -3,11 +3,8 @@ package com.acszo.redomi.di
 import android.content.Context
 import com.acszo.redomi.data.SettingsDataStore
 import com.acszo.redomi.repository.GithubRepository
-import com.acszo.redomi.repository.SongLinkRepository
 import com.acszo.redomi.service.Api.BASE_URL_GITHUB
-import com.acszo.redomi.service.Api.BASE_URL_SONG_LINK
 import com.acszo.redomi.service.GithubService
-import com.acszo.redomi.service.SongLinkService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,16 +31,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSongLinkService(
-        jsonConverter: Converter.Factory
-    ): SongLinkService = Retrofit.Builder()
-        .baseUrl(BASE_URL_SONG_LINK)
-        .addConverterFactory(jsonConverter)
-        .build()
-        .create(SongLinkService::class.java)
-
-    @Provides
-    @Singleton
     fun provideGithubService(
         jsonConverter: Converter.Factory
     ): GithubService = Retrofit.Builder()
@@ -51,12 +38,6 @@ object AppModule {
         .addConverterFactory(jsonConverter)
         .build()
         .create(GithubService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideSongRepository(
-        songLinkService: SongLinkService
-    ): SongLinkRepository = SongLinkRepository(songLinkService)
 
     @Provides
     @Singleton

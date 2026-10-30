@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">ユニバーサルリンクを共有</string>
     <string name="open">開ける</string>
     <string name="share">共有</string>
-    <string name="song_cover">曲のカバー</string>
     <string name="settings">設定</string>
     <string name="back">戻る</string>
     <string name="apps">アプリ</string>
@@ -49,5 +48,4 @@
     <string name="error_server">サーバーエラー</string>
     <string name="error_timeout">Request timed out</string>
     <string name="retry">Retry</string>
-    <string name="country_code">Country code</string>
 </resources>

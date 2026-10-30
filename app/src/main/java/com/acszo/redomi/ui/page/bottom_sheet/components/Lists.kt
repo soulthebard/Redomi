@@ -25,7 +25,6 @@ import com.acszo.redomi.conversion.Destination
 import com.acszo.redomi.conversion.DestinationKind
 import com.acszo.redomi.data.ListOrientation
 import com.acszo.redomi.model.Platform.platforms
-import com.acszo.redomi.model.Song
 import com.acszo.redomi.R
 import com.acszo.redomi.ui.common.ClickableItem
 
@@ -35,26 +34,6 @@ private data class AppEntry(
     val title: String,
     val caption: String? = null
 )
-
-@Composable
-fun AppsList(
-    listOrientation: ListOrientation,
-    songs: List<Song>,
-    iconShape: Shape,
-    gridSize: Int,
-    onClick: (song: Song) -> Unit
-) {
-    EntriesList(
-        listOrientation = listOrientation,
-        entries = songs.map {
-            val app = platforms[it.platform]!!
-            AppEntry(icon = app.icon, title = app.title)
-        },
-        iconShape = iconShape,
-        gridSize = gridSize,
-        onClick = { onClick(songs[it]) }
-    )
-}
 
 /** The conversion sheet's tiles: each destination with its service icon and what kind it is. */
 @Composable

@@ -3,8 +3,6 @@ package com.acszo.redomi.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.acszo.redomi.data.DataStoreConst.CLEAN_LINKS
-import com.acszo.redomi.data.DataStoreConst.COUNTRY_CODE
-import com.acszo.redomi.data.DataStoreConst.DEFAULT_COUNTRY_CODE
 import com.acszo.redomi.data.DataStoreConst.FIRST_TIME
 import com.acszo.redomi.data.DataStoreConst.GRID_SIZE
 import com.acszo.redomi.data.DataStoreConst.ICON_SHAPE
@@ -21,9 +19,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,9 +47,6 @@ class DataStoreViewModel @Inject constructor(
 
     private val _themeMode = MutableStateFlow(Theme.SYSTEM_THEME.ordinal)
     val themeMode = _themeMode.asStateFlow()
-
-    private val _countryCode = MutableStateFlow(DEFAULT_COUNTRY_CODE)
-    val countryCode = _countryCode.asStateFlow()
 
     private val _cleanLinks = MutableStateFlow(false)
     val cleanLinks = _cleanLinks.asStateFlow()
@@ -84,20 +77,10 @@ class DataStoreViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            settingsDataStore.getString(COUNTRY_CODE).collectLatest {
-                _countryCode.value = it ?: DEFAULT_COUNTRY_CODE
-            }
-        }
-
-        viewModelScope.launch {
             settingsDataStore.getBoolean(CLEAN_LINKS).collectLatest {
                 _cleanLinks.value = it == true
             }
         }
-    }
-
-    fun getCountryCodeBlocking(): String = runBlocking {
-        settingsDataStore.getString(COUNTRY_CODE).first() ?: DEFAULT_COUNTRY_CODE
     }
 
     fun getOpeningApps() = viewModelScope.launch {
@@ -144,10 +127,6 @@ class DataStoreViewModel @Inject constructor(
 
     fun setThemeMode(themeMode: Int) = viewModelScope.launch {
         settingsDataStore.setInt(THEME_MODE, themeMode)
-    }
-
-    fun setCountryCode(countryCode: String) = viewModelScope.launch {
-        settingsDataStore.setString(COUNTRY_CODE, countryCode)
     }
 
     fun setCleanLinks(cleanLinks: Boolean) = viewModelScope.launch {

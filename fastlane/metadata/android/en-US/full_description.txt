@@ -1,9 +1,12 @@
-Unofficial song.link client
+Open and share music links across streaming services
 
 <br><b>Features:</b>
 
 - Open supported links from different music services in your favourite streaming app
-- Convert links and share songs with others on their preferred platforms
+- Convert YouTube and YouTube Music video links directly, keeping the start time
+- Share a universal MusicLink link that lets anyone find the song on their preferred platform
+- Optionally remove known tracking parameters from links (Clean Links)
+- No account or API key needed
 - Customize Sharesheet in different ways:
   - Icon shapes
   - Choose which apps to display

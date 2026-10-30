@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">Share universal link</string>
     <string name="open">Open</string>
     <string name="share">Share</string>
-    <string name="song_cover">Song Cover</string>
     <string name="settings">Settings</string>
     <string name="back">Back</string>
     <string name="apps">Apps</string>
@@ -67,5 +66,4 @@
     <string name="error_server">Server Error</string>
     <string name="error_timeout">Request timed out</string>
     <string name="retry">Retry</string>
-    <string name="country_code">Country code</string>
 </resources>

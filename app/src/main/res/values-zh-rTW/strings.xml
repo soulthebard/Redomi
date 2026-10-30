@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">分享連結</string>
     <string name="open">開啟</string>
     <string name="share">分享</string>
-    <string name="song_cover">分享封面</string>
     <string name="settings">設定</string>
     <string name="back">返回</string>
     <string name="apps">應用程式</string>
@@ -49,5 +48,4 @@
     <string name="error_server">伺服器錯誤</string>
     <string name="error_timeout">請求逾時</string>
     <string name="retry">重試</string>
-    <string name="country_code">Country code</string>
 </resources>

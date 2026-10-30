@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">Evrensel bağlantıyı paylaş</string>
     <string name="open">Aç</string>
     <string name="share">Paylaş</string>
-    <string name="song_cover">Şarkı kapağı</string>
     <string name="settings">Ayarlar</string>
     <string name="back">Geri</string>
     <string name="apps">Uygulamalar</string>
@@ -49,5 +48,4 @@
     <string name="error_server">Sunucu hatası</string>
     <string name="error_timeout">İstek zaman aşımına uğradı</string>
     <string name="retry">Tekrar dene</string>
-    <string name="country_code">Ülke kodu</string>
 </resources>

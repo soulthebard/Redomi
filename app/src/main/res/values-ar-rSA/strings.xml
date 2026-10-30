@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">مشاركة الرابط العالمي</string>
     <string name="open">فتح</string>
     <string name="share">مشاركة</string>
-    <string name="song_cover">غلاف الأغنية</string>
     <string name="settings">إعدادات</string>
     <string name="back">عودة</string>
     <string name="apps">التطبيقات</string>
@@ -49,5 +48,4 @@
     <string name="error_server">خطأ من الخادم</string>
     <string name="error_timeout">Request timed out</string>
     <string name="retry">Retry</string>
-    <string name="country_code">Country code</string>
 </resources>

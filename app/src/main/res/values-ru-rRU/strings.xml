@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">Поделиться универсальной ссылкой</string>
     <string name="open">Открыть</string>
     <string name="share">Поделиться</string>
-    <string name="song_cover">Обложка песни</string>
     <string name="settings">Настройки</string>
     <string name="back">Назад</string>
     <string name="apps">Приложения</string>
@@ -49,5 +48,4 @@
     <string name="error_server">Ошибка сервера</string>
     <string name="error_timeout">Время запроса истекло</string>
     <string name="retry">Повторить</string>
-    <string name="country_code">Код страны</string>
 </resources>

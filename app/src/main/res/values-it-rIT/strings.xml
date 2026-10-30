@@ -4,7 +4,6 @@
     <string name="title_share_universal_link">Condividi link universale</string>
     <string name="open">Apri</string>
     <string name="share">Condividi</string>
-    <string name="song_cover">Cover Canzone</string>
     <string name="settings">Impostazioni</string>
     <string name="back">Indietro</string>
     <string name="apps">Applicazioni</string>
@@ -49,5 +48,4 @@
     <string name="error_server">Errore del server</string>
     <string name="error_timeout">Richiesta scaduta</string>
     <string name="retry">Riprova</string>
-    <string name="country_code">Codice paese</string>
 </resources>
