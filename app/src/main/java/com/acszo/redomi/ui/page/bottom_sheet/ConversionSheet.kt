@@ -46,12 +46,16 @@ import com.acszo.redomi.utils.IntentUtil.onIntentView
  *
  * - ACTION_VIEW: choosing a destination opens it; a single real destination opens at once.
  * - ACTION_SEND: choosing a destination offers Open, Copy and Share for its URL.
+ *
+ * [generation] changes with every new request, so a link delivered to a sheet that is still open
+ * starts from scratch: no leftover selection, no leftover actions menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConversionSheet(
     onDismiss: () -> Unit,
     content: SheetContent?,
+    generation: Int,
     isActionSend: Boolean,
     isUpdateAvailable: Boolean,
     iconShape: Shape,
@@ -94,6 +98,7 @@ fun ConversionSheet(
                 is SheetContent.Ready -> {
                     ReadyContent(
                         content = content,
+                        generation = generation,
                         onDismiss = onDismiss,
                         isActionSend = isActionSend,
                         isUpdateAvailable = isUpdateAvailable,
@@ -110,6 +115,7 @@ fun ConversionSheet(
 @Composable
 private fun ReadyContent(
     content: SheetContent.Ready,
+    generation: Int,
     onDismiss: () -> Unit,
     isActionSend: Boolean,
     isUpdateAvailable: Boolean,
@@ -121,10 +127,10 @@ private fun ReadyContent(
     val destinations = content.destinations
 
     val autoOpen = !isActionSend && SheetContentBuilder.shouldAutoOpen(destinations)
-    var selected by remember(content) {
+    var selected by remember(content, generation) {
         mutableStateOf(if (destinations.size == 1) destinations.first() else null)
     }
-    var showActionsMenu by remember(content) {
+    var showActionsMenu by remember(content, generation) {
         mutableStateOf(destinations.size == 1 && (isActionSend || autoOpen))
     }
 
@@ -178,7 +184,7 @@ private fun ReadyContent(
                 Box(
                     modifier = Modifier.height(200.dp),
                 ) {
-                    LaunchedEffect(destination) {
+                    LaunchedEffect(generation, destination) {
                         onIntentView(context, destination.url)
                         onDismiss()
                     }

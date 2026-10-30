@@ -3,15 +3,15 @@ package com.acszo.redomi.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.acszo.redomi.conversion.ConversionPlanner
+import com.acszo.redomi.conversion.ConversionSession
+import com.acszo.redomi.conversion.IncomingRequest
 import com.acszo.redomi.conversion.SheetContent
 import com.acszo.redomi.conversion.SheetContentBuilder
+import com.acszo.redomi.data.AppList
 import com.acszo.redomi.data.DataStoreConst.CLEAN_LINKS
 import com.acszo.redomi.data.SettingsDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Plans the conversion sheet from the incoming link, without any network request. */
@@ -20,18 +20,25 @@ class ConversionViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore
 ): ViewModel() {
 
-    private val _content = MutableStateFlow<SheetContent?>(null)
+    private val session = ConversionSession(viewModelScope) { plan(it) }
 
-    /** Null until the first plan is ready. */
-    val content = _content.asStateFlow()
+    val state = session.state
 
-    /** [input] is the incoming link or shared text, untouched; [appListKey] picks the selected apps. */
-    fun plan(input: String?, appListKey: String) = viewModelScope.launch {
-        val selectedApps = settingsDataStore.getSetOfStrings(appListKey).first()
+    /**
+     * [request] holds the incoming link or shared text, untouched. Set [force] for a new intent
+     * delivered to a running activity; without it a request equal to the current one is ignored.
+     */
+    fun submit(request: IncomingRequest, force: Boolean = false) = session.submit(request, force)
+
+    fun retry() = session.retry()
+
+    private suspend fun plan(request: IncomingRequest): SheetContent {
+        val appList = if (request.isActionSend) AppList.SHARING else AppList.OPENING
+        val selectedApps = settingsDataStore.getSetOfStrings(appList.key).first()
         val cleanLinks = settingsDataStore.getBoolean(CLEAN_LINKS).first() == true
 
-        _content.value = SheetContentBuilder.build(
-            result = ConversionPlanner.plan(input, cleanLinks),
+        return SheetContentBuilder.build(
+            result = ConversionPlanner.plan(request.input, cleanLinks),
             selectedApps = selectedApps,
             cleanLinks = cleanLinks
         )
