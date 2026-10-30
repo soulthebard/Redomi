@@ -502,6 +502,15 @@ class MusicLinkParserTest {
         assertEquals(videoId, recognized("https://www.youtube.com/watch?v=$videoId&v=aaaaaaaaaaa").id)
     }
 
+    @Test
+    fun recognizedResultKeepsTheSourceUrlWithItsParameters() {
+        val url = "https://open.spotify.com/track/$spotifyTrackId?si=abc123"
+        val result = MusicLinkParser.parse("Look: ($url).") as Recognized
+
+        assertEquals(url, result.sourceUrl)
+        assertEquals("https://open.spotify.com/track/$spotifyTrackId", result.link.canonicalUrl)
+    }
+
     // Model
 
     @Test

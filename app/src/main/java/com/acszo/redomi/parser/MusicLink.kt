@@ -40,8 +40,11 @@ data class MusicLink(
 
 sealed interface MusicLinkParseResult {
 
-    /** A well-formed URL of a supported service and content type. */
-    data class Recognized(val link: MusicLink) : MusicLinkParseResult
+    /**
+     * A well-formed URL of a supported service and content type. [sourceUrl] is the URL as it was
+     * found in the input, without surrounding punctuation but with every parameter it carried.
+     */
+    data class Recognized(val link: MusicLink, val sourceUrl: String) : MusicLinkParseResult
 
     /**
      * A well-formed http(s) URL that cannot be handled. [service] is set when the host belongs

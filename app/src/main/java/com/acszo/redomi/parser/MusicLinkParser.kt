@@ -96,7 +96,7 @@ object MusicLinkParser {
         return when (host) {
             in YOUTUBE_HOSTS -> parseYouTube(url, segments, params, music = false)
             YOUTUBE_MUSIC_HOST -> parseYouTube(url, segments, params, music = true)
-            YOUTUBE_SHORT_HOST -> withId(segments.firstOrNull(), YOUTUBE_VIDEO_ID) {
+            YOUTUBE_SHORT_HOST -> withId(url, segments.firstOrNull(), YOUTUBE_VIDEO_ID) {
                 MusicLink(MusicService.YOUTUBE, MusicContentType.VIDEO, it, "https://www.youtube.com/watch?v=$it")
             }
             SPOTIFY_HOST -> parseSpotify(url, segments)
@@ -148,23 +148,23 @@ object MusicLinkParser {
         val host = if (music) YOUTUBE_MUSIC_HOST else "www.youtube.com"
         val unsupported = Unsupported(url, service, UnsupportedReason.UNSUPPORTED_CONTENT_TYPE)
 
-        fun artist(id: String?) = withId(id, YOUTUBE_CHANNEL_ID) {
+        fun artist(id: String?) = withId(url, id, YOUTUBE_CHANNEL_ID) {
             MusicLink(service, MusicContentType.ARTIST, it, "https://$host/channel/$it")
         }
 
         return when (segments.firstOrNull()) {
             // Also on YouTube Music: a watch link can be a music video, podcast or upload, not only a song
-            "watch" -> withId(params["v"], YOUTUBE_VIDEO_ID) {
+            "watch" -> withId(url, params["v"], YOUTUBE_VIDEO_ID) {
                 MusicLink(service, MusicContentType.VIDEO, it, "https://$host/watch?v=$it")
             }
             "shorts", "embed", "live", "v" -> if (music) {
                 unsupported
             } else {
-                withId(segments.getOrNull(1), YOUTUBE_VIDEO_ID) {
+                withId(url, segments.getOrNull(1), YOUTUBE_VIDEO_ID) {
                     MusicLink(service, MusicContentType.VIDEO, it, "https://$host/watch?v=$it")
                 }
             }
-            "playlist" -> withId(params["list"], YOUTUBE_PLAYLIST_ID) {
+            "playlist" -> withId(url, params["list"], YOUTUBE_PLAYLIST_ID) {
                 // YouTube Music exposes albums as playlists whose id starts with OLAK5uy_
                 val type = if (music && it.startsWith("OLAK5uy_")) {
                     MusicContentType.ALBUM
@@ -179,7 +179,7 @@ object MusicLinkParser {
                 when {
                     !music -> unsupported
                     id == null -> Invalid(InvalidReason.MISSING_IDENTIFIER)
-                    id.startsWith("MPREb_") -> withId(id, YOUTUBE_MUSIC_ALBUM_ID) {
+                    id.startsWith("MPREb_") -> withId(url, id, YOUTUBE_MUSIC_ALBUM_ID) {
                         MusicLink(service, MusicContentType.ALBUM, it, "https://$host/browse/$it")
                     }
                     id.startsWith("UC") -> artist(id)
@@ -202,7 +202,7 @@ object MusicLinkParser {
             "artist" -> MusicContentType.ARTIST
             else -> return Unsupported(url, MusicService.SPOTIFY, UnsupportedReason.UNSUPPORTED_CONTENT_TYPE)
         }
-        return withId(parts.getOrNull(1), SPOTIFY_ID) {
+        return withId(url, parts.getOrNull(1), SPOTIFY_ID) {
             MusicLink(MusicService.SPOTIFY, type, it, "https://$SPOTIFY_HOST/${type.name.lowercase()}/$it")
         }
     }
@@ -213,13 +213,14 @@ object MusicLinkParser {
             ?.value
 
     private fun withId(
+        url: String,
         id: String?,
         pattern: Regex,
         build: (String) -> MusicLink
     ): MusicLinkParseResult = when {
         id == null || id.isEmpty() -> Invalid(InvalidReason.MISSING_IDENTIFIER)
         !pattern.matches(id) -> Invalid(InvalidReason.INVALID_IDENTIFIER)
-        else -> Recognized(build(id))
+        else -> Recognized(build(id), url)
     }
 
 }
