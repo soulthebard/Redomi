@@ -149,4 +149,7 @@ dependencies {
 
     implementation project(":squircle")
 
+    // Unit tests
+    testImplementation "junit:junit:4.13.2"
+
 }
