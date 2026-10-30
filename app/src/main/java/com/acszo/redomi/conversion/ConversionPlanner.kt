@@ -94,14 +94,18 @@ object ConversionPlanner {
         return ConversionPlanResult.Planned(source, actions)
     }
 
-    /** A YouTube video id is the same on YouTube and YouTube Music. */
+    /**
+     * A YouTube video id is the same on YouTube and YouTube Music. A valid starting time of the
+     * source follows as a plain `t=<seconds>`; no other parameter is carried over.
+     */
     private fun sameIdConversions(source: ConversionSource): List<ConversionAction> {
         val id = source.id
         if (id == null || source.contentType != MusicContentType.VIDEO || source.service !in YOUTUBE_SERVICES) {
             return emptyList()
         }
         val target = if (source.service == MusicService.YOUTUBE) MusicService.YOUTUBE_MUSIC else MusicService.YOUTUBE
-        return listOf(ConversionAction.SameIdConversion(target, watchUrl(target, id)))
+        val start = YouTubeTimestamp.fromUrl(source.originalUrl)?.let { "&t=$it" }.orEmpty()
+        return listOf(ConversionAction.SameIdConversion(target, watchUrl(target, id) + start))
     }
 
     private fun watchUrl(service: MusicService, videoId: String) = when (service) {

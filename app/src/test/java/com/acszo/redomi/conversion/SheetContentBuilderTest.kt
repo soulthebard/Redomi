@@ -57,7 +57,7 @@ class SheetContentBuilderTest {
             sheet.destinations.map { it.service }
         )
         assertEquals("https://www.youtube.com/watch?v=$videoId&t=42s", sheet.destinations[0].url)
-        assertEquals("https://music.youtube.com/watch?v=$videoId", sheet.destinations[1].url)
+        assertEquals("https://music.youtube.com/watch?v=$videoId&t=42", sheet.destinations[1].url)
         assertTrue(sheet.destinations[2].url.startsWith(resolve))
         assertNull(sheet.notice)
     }
@@ -237,7 +237,7 @@ class SheetContentBuilderTest {
         )
 
         assertEquals("https://youtu.be/xCUUItmmDDc?t=58", sheet.destinations[0].url)
-        assertEquals("https://music.youtube.com/watch?v=xCUUItmmDDc", sheet.destinations[1].url)
+        assertEquals("https://music.youtube.com/watch?v=xCUUItmmDDc&t=58", sheet.destinations[1].url)
         assertEquals(
             "https://youtu.be/xCUUItmmDDc?t=58",
             URLDecoder.decode(sheet.destinations[2].url.removePrefix(resolve), "UTF-8")

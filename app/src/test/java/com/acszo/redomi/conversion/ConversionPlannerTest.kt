@@ -68,7 +68,7 @@ class ConversionPlannerTest {
         assertEquals(
             listOf(
                 Original(MusicService.YOUTUBE, "https://www.youtube.com/watch?v=$videoId&t=42s"),
-                SameIdConversion(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId"),
+                SameIdConversion(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId&t=42"),
                 UniversalResolver("${resolve}https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D$videoId%26t%3D42s")
             ),
             plan.actions
@@ -129,6 +129,80 @@ class ConversionPlannerTest {
 
         assertEquals(ActionClassification.SAME_ID_CONVERSION, conversion.classification)
         assertFalse(conversion.classification.isVerifiedMatch)
+    }
+
+    // Starting times
+
+    private fun sameIdUrl(input: String): String =
+        planned(input).actions.filterIsInstance<SameIdConversion>().single().url
+
+    @Test
+    fun commonTimestampFormatsFollowTheSameIdConversion() {
+        val expected58 = "https://music.youtube.com/watch?v=$videoId&t=58"
+        val expected90 = "https://music.youtube.com/watch?v=$videoId&t=90"
+
+        assertEquals(expected58, sameIdUrl("https://youtu.be/$videoId?t=58"))
+        assertEquals(expected58, sameIdUrl("https://youtu.be/$videoId?t=58s"))
+        assertEquals(expected90, sameIdUrl("https://youtu.be/$videoId?t=1m30s"))
+        assertEquals(expected90, sameIdUrl("https://www.youtube.com/watch?v=$videoId&start=90"))
+        assertEquals(expected58, sameIdUrl("https://www.youtube.com/watch?v=$videoId#t=58"))
+        assertEquals(expected90, sameIdUrl("https://www.youtube.com/embed/$videoId?start=90"))
+    }
+
+    @Test
+    fun theTimestampAlsoFollowsYouTubeMusicToYouTube() {
+        assertEquals(
+            "https://www.youtube.com/watch?v=$videoId&t=90",
+            sameIdUrl("https://music.youtube.com/watch?v=$videoId&t=1m30s")
+        )
+    }
+
+    @Test
+    fun malformedOrUnreasonableTimestampsAreDropped() {
+        listOf("abc", "0", "-5", "1m30", "1.5", "999999", "100000000000", "58%73", "").forEach {
+            assertEquals(
+                it,
+                "https://music.youtube.com/watch?v=$videoId",
+                sameIdUrl("https://youtu.be/$videoId?t=$it")
+            )
+        }
+    }
+
+    @Test
+    fun onlyTheTimestampIsCarriedNotTrackingOrPlaylistInformation() {
+        val input = "https://www.youtube.com/watch?v=$videoId&list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI&index=2" +
+            "&si=abc&is=def&feature=share&utm_source=x&t=58"
+
+        assertEquals("https://music.youtube.com/watch?v=$videoId&t=58", sameIdUrl(input))
+    }
+
+    @Test
+    fun aTimestampDoesNotMakeTheConversionAVerifiedMatch() {
+        val conversion = planned("https://youtu.be/$videoId?t=58").actions.filterIsInstance<SameIdConversion>().single()
+
+        assertEquals(ActionClassification.SAME_ID_CONVERSION, conversion.classification)
+        assertFalse(conversion.classification.isVerifiedMatch)
+    }
+
+    @Test
+    fun theTimestampOfTheOriginalLinkIsKeptWithAndWithoutCleanLinks() {
+        val input = "https://youtu.be/xCUUItmmDDc?t=58&is=edqQ_EaMEl-eeORJ"
+
+        assertEquals(input, (planned(input).actions.first() as Original).url)
+        assertEquals(
+            "https://youtu.be/xCUUItmmDDc?t=58",
+            ((ConversionPlanner.plan(input, cleanLinks = true) as Planned).actions.first() as Original).url
+        )
+        assertEquals("https://music.youtube.com/watch?v=xCUUItmmDDc&t=58", sameIdUrl(input))
+    }
+
+    @Test
+    fun timestampedConversionsStillParseBackToTheSameVideo() {
+        val conversion = planned("https://youtu.be/$videoId?t=1m30s").actions.filterIsInstance<SameIdConversion>().single()
+
+        val link = (MusicLinkParser.parse(conversion.url) as MusicLinkParseResult.Recognized).link
+        assertEquals(MusicService.YOUTUBE_MUSIC, link.service)
+        assertEquals(videoId, link.id)
     }
 
     @Test
@@ -227,9 +301,9 @@ class ConversionPlannerTest {
         val plan = ConversionPlanner.plan("https://www.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&t=42s&si=abc", cleanLinks = true) as Planned
 
         assertEquals("https://www.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&t=42s", (plan.actions.first() as Original).url)
-        // the same-ID conversion carries only the video, as before
+        // the same-ID conversion carries the video and its start time, but not list or si
         assertEquals(
-            SameIdConversion(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId"),
+            SameIdConversion(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId&t=42"),
             plan.actions[1]
         )
     }
