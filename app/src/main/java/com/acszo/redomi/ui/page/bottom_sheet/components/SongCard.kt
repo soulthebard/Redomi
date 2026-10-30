@@ -103,36 +103,44 @@ fun SongCard(
             )
         }
 
-        IconButton(
-            onClick = {
-                onIntentSettingsPage(context)
+        SettingsButton(isUpdateAvailable = isUpdateAvailable)
+    }
+}
+
+/** The settings shortcut of the sheet header, with the update badge. */
+@Composable
+fun SettingsButton(isUpdateAvailable: Boolean) {
+    val context = LocalContext.current
+
+    IconButton(
+        onClick = {
+            onIntentSettingsPage(context)
+        }
+    ) {
+        RotatingIcon(
+            icon = R.drawable.ic_settings,
+            size = 24.dp,
+            startValue = 120f,
+            contentDescription = stringResource(id = R.string.settings)
+        )
+
+        if (isUpdateAvailable) {
+            val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+            val errorColor = MaterialTheme.colorScheme.error
+
+            Canvas(
+                modifier = Modifier
+                    .size(14.dp)
+                    .offset(9.dp, -(6.dp))
+            ) {
+                drawCircle(color = surfaceColor)
             }
-        ) {
-            RotatingIcon(
-                icon = R.drawable.ic_settings,
-                size = 24.dp,
-                startValue = 120f,
-                contentDescription = stringResource(id = R.string.settings)
-            )
-
-            if (isUpdateAvailable) {
-                val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
-                val errorColor = MaterialTheme.colorScheme.error
-
-                Canvas(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .offset(9.dp, -(6.dp))
-                ) {
-                    drawCircle(color = surfaceColor)
-                }
-                Canvas(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .offset(9.dp, -(6.dp))
-                ) {
-                    drawCircle(color = errorColor)
-                }
+            Canvas(
+                modifier = Modifier
+                    .size(8.dp)
+                    .offset(9.dp, -(6.dp))
+            ) {
+                drawCircle(color = errorColor)
             }
         }
     }

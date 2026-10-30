@@ -47,6 +47,19 @@
     <string name="update_info_failed">Couldn\'t load update info</string>
     <string name="clean_links">Clean Links</string>
     <string name="clean_links_description">Remove known tracking parameters from music links you open, copy or share</string>
+    <string name="musiclink" translatable="false">MusicLink</string>
+    <string name="destination_original">Original</string>
+    <string name="destination_same_id">Same ID</string>
+    <string name="destination_resolver">Finds the song</string>
+    <string name="content_track">Track</string>
+    <string name="content_video">Video</string>
+    <string name="content_album">Album</string>
+    <string name="content_playlist">Playlist</string>
+    <string name="content_artist">Artist</string>
+    <string name="note_same_id">Same video ID on this service. It is not a verified match and may not be playable there.</string>
+    <string name="note_resolver">MusicLink opens a page that finds this music on other services.</string>
+    <string name="notice_cannot_convert">This link can\'t be converted. You can open it as it is.</string>
+    <string name="error_unsupported_conversion">This link isn\'t supported</string>
     <string name="error_incorrect_url">The given url is incorrect</string>
     <string name="error_unsupported_link">This link can\'t be shared as a universal link</string>
     <string name="error_no_internet_connection">No internet connection</string>

@@ -11,10 +11,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.acszo.redomi.data.AppList
 import com.acszo.redomi.data.IconShape
 import com.acszo.redomi.data.ListOrientation
-import com.acszo.redomi.ui.page.bottom_sheet.BottomSheet
+import com.acszo.redomi.ui.page.bottom_sheet.ConversionSheet
 import com.acszo.redomi.ui.theme.RedomiTheme
+import com.acszo.redomi.viewmodel.ConversionViewModel
 import com.acszo.redomi.viewmodel.DataStoreViewModel
-import com.acszo.redomi.viewmodel.SongLinkViewModel
 import com.acszo.redomi.viewmodel.UpdateViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,35 +29,29 @@ class ConvertSongActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val isActionSend = (intent.action == Intent.ACTION_SEND)
-        var intentData: String
-        var appList = AppList.OPENING
+        val appList = if (isActionSend) AppList.SHARING else AppList.OPENING
+        // Handed to the planner as received; it finds the link in shared text itself.
+        val input = if (isActionSend) {
+            intent?.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+        } else {
+            intent?.dataString
+        }
 
         setContent {
-            if (isActionSend) {
-                intentData = intent?.getStringExtra(Intent.EXTRA_TEXT)
-                    ?.replaceFirst(".*(?=https://)".toRegex(), "").toString()
-                appList = AppList.SHARING
-            } else {
-                intentData = intent?.data.toString()
-            }
-
-            val songLinkViewModel: SongLinkViewModel = hiltViewModel()
+            val conversionViewModel: ConversionViewModel = hiltViewModel()
             val updateViewModel: UpdateViewModel = hiltViewModel()
             val dataStoreViewModel: DataStoreViewModel = hiltViewModel()
 
-            val countryCode = dataStoreViewModel.getCountryCodeBlocking()
-
-            val bottomSheetUiState by songLinkViewModel.bottomSheetUiState.collectAsStateWithLifecycle()
+            val content by conversionViewModel.content.collectAsStateWithLifecycle()
             val updatePageUiState by updateViewModel.updatePageUiState.collectAsStateWithLifecycle()
             val theme by dataStoreViewModel.themeMode.collectAsStateWithLifecycle()
             val iconShape by dataStoreViewModel.iconShape.collectAsStateWithLifecycle()
             val listOrientation by dataStoreViewModel.listOrientation.collectAsStateWithLifecycle()
             val gridSize by dataStoreViewModel.gridSize.collectAsStateWithLifecycle()
-            val cleanLinks by dataStoreViewModel.cleanLinks.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
-                if (!bottomSheetUiState.isLoaded)
-                    songLinkViewModel.getPlatformsLink(intentData, appList.key, countryCode)
+                if (content == null)
+                    conversionViewModel.plan(input, appList.key)
                 if (isGithubBuild) {
                     if (!updatePageUiState.isLoaded)
                         updateViewModel.checkUpdate(versionCode)
@@ -67,19 +61,17 @@ class ConvertSongActivity : ComponentActivity() {
             RedomiTheme(
                 theme = theme
             ) {
-                BottomSheet(
+                ConversionSheet(
                     onDismiss = { this.finish() },
-                    uiState = bottomSheetUiState,
+                    content = content,
                     isActionSend = isActionSend,
                     isUpdateAvailable = updatePageUiState.isUpdateAvailable,
                     iconShape = IconShape.entries[iconShape].shape,
                     listOrientation = ListOrientation.entries[listOrientation],
                     gridSize = gridSize,
-                    cleanLinks = cleanLinks,
-                    refresh = { songLinkViewModel.refresh(intentData, appList.key, countryCode) }
+                    retry = { conversionViewModel.plan(input, appList.key) }
                 )
             }
         }
     }
 }
-

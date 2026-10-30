@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.acszo.redomi.R
 import com.acszo.redomi.ui.common.ClickableItem
@@ -36,42 +38,57 @@ import kotlinx.coroutines.launch
 @Composable
 fun ActionsMenu(
     url: String,
+    note: String? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
 
-    Row(
-        modifier = Modifier
-            .padding(vertical = 15.dp)
-            .heightIn(min = 150.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ActionsItem(
-            icon = R.drawable.ic_play,
-            title = stringResource(id = R.string.open)
-        ) {
-            onIntentView(context, url)
-            onDismiss()
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        note?.let {
+            Text(
+                text = it,
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 10.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center
+            )
         }
 
-        ActionsItem(
-            icon = R.drawable.ic_link,
-            title = stringResource(id = android.R.string.copy)
+        Row(
+            modifier = Modifier
+                .padding(vertical = 15.dp)
+                .heightIn(min = 150.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            scope.launch { copyText(clipboard, url) }
-            onDismiss()
-        }
+            ActionsItem(
+                icon = R.drawable.ic_play,
+                title = stringResource(id = R.string.open)
+            ) {
+                onIntentView(context, url)
+                onDismiss()
+            }
 
-        ActionsItem(
-            icon = R.drawable.ic_share,
-            title = stringResource(id = R.string.share)
-        ) {
-            onIntentSend(context, url)
-            onDismiss()
+            ActionsItem(
+                icon = R.drawable.ic_link,
+                title = stringResource(id = android.R.string.copy)
+            ) {
+                scope.launch { copyText(clipboard, url) }
+                onDismiss()
+            }
+
+            ActionsItem(
+                icon = R.drawable.ic_share,
+                title = stringResource(id = R.string.share)
+            ) {
+                onIntentSend(context, url)
+                onDismiss()
+            }
         }
     }
 }
