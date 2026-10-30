@@ -145,10 +145,10 @@ class MusicLinkParserTest {
     // YouTube Music
 
     @Test
-    fun youtubeMusicWatchIsATrack() {
+    fun youtubeMusicWatchIsAVideoBecauseItIsNotGuaranteedToBeAudio() {
         assertLink(
             recognized("https://music.youtube.com/watch?v=$videoId"),
-            MusicService.YOUTUBE_MUSIC, MusicContentType.TRACK, videoId,
+            MusicService.YOUTUBE_MUSIC, MusicContentType.VIDEO, videoId,
             "https://music.youtube.com/watch?v=$videoId"
         )
     }
@@ -303,6 +303,14 @@ class MusicLinkParserTest {
         assertEquals(MusicService.TIDAL, unsupported("https://tidal.com/browse/track/123").service)
         assertEquals(MusicService.SOUNDCLOUD, unsupported("https://soundcloud.com/artist/track").service)
         assertEquals(MusicService.ANGHAMI, unsupported("https://play.anghami.com/song/1").service)
+    }
+
+    @Test
+    fun regionalHostsOfKnownServicesAreLabeled() {
+        assertEquals(MusicService.AMAZON_MUSIC, unsupported("https://music.amazon.de/albums/B000000000").service)
+        assertEquals(MusicService.YANDEX_MUSIC, unsupported("https://music.yandex.ru/track/609676").service)
+        assertEquals(MusicService.NAPSTER, unsupported("https://play.napster.com/track/tra.416878691").service)
+        assertNull(unsupported("https://music.amazon.evil.example/albums/B000000000").service)
     }
 
     @Test

@@ -35,17 +35,20 @@ object MusicLinkParser {
     private const val SPOTIFY_HOST = "open.spotify.com"
 
     // Known services without a parser yet; only used to label Unsupported results.
+    // Subdomains match too (e.g. play.anghami.com), so only list the registrable or regional hosts.
     private val OTHER_SERVICE_DOMAINS = mapOf(
         "deezer.com" to MusicService.DEEZER,
+        "deezer.page.link" to MusicService.DEEZER,
         "tidal.com" to MusicService.TIDAL,
-        "music.amazon.com" to MusicService.AMAZON_MUSIC,
-        "music.apple.com" to MusicService.APPLE_MUSIC,
         "soundcloud.com" to MusicService.SOUNDCLOUD,
         "napster.com" to MusicService.NAPSTER,
-        "music.yandex.com" to MusicService.YANDEX_MUSIC,
-        "music.yandex.ru" to MusicService.YANDEX_MUSIC,
-        "anghami.com" to MusicService.ANGHAMI
-    )
+        "anghami.com" to MusicService.ANGHAMI,
+        "music.apple.com" to MusicService.APPLE_MUSIC,
+        "itunes.apple.com" to MusicService.APPLE_MUSIC
+    ) + listOf("com", "co.uk", "de", "fr", "it", "es", "co.jp", "com.br", "ca", "in", "com.au", "com.mx")
+        .associate { "music.amazon.$it" to MusicService.AMAZON_MUSIC } +
+        listOf("com", "ru", "by", "kz", "uz")
+            .associate { "music.yandex.$it" to MusicService.YANDEX_MUSIC }
 
     /**
      * Parses [input], which may be a bare URL or ordinary shared text containing one or more URLs.
@@ -150,9 +153,9 @@ object MusicLinkParser {
         }
 
         return when (segments.firstOrNull()) {
+            // Also on YouTube Music: a watch link can be a music video, podcast or upload, not only a song
             "watch" -> withId(params["v"], YOUTUBE_VIDEO_ID) {
-                val type = if (music) MusicContentType.TRACK else MusicContentType.VIDEO
-                MusicLink(service, type, it, "https://$host/watch?v=$it")
+                MusicLink(service, MusicContentType.VIDEO, it, "https://$host/watch?v=$it")
             }
             "shorts", "embed", "live", "v" -> if (music) {
                 unsupported
