@@ -1,5 +1,6 @@
 package com.acszo.redomi.sharing
 
+import com.acszo.redomi.links.LinkCleaner
 import com.acszo.redomi.parser.InvalidReason
 import com.acszo.redomi.parser.MusicContentType
 import com.acszo.redomi.parser.MusicLinkParseResult
@@ -31,29 +32,33 @@ object UniversalLinkBuilder {
     /**
      * Builds a universal link from [input], a source URL or shared text containing one.
      *
-     * Links of YouTube, YouTube Music and Spotify are rebuilt from their parsed identifier, which
-     * drops tracking parameters. Links of the other services Redomi supports are not parsed yet,
-     * so their URL is forwarded unchanged, since parts like Apple Music's `?i=` select the track.
+     * The URL that is encoded into the link is the source URL exactly as it was found in [input],
+     * for every service. With [cleanLinks] on, [LinkCleaner] first removes the tracking parameters
+     * it knows; with it off nothing is removed, so parameters such as `list`, `t` or Apple Music's
+     * `i` always survive. The URL is percent-encoded once, after cleaning.
+     *
+     * The parser still decides whether the content may be shared at all (playlists and artists
+     * are not) and which service it belongs to.
      */
-    fun build(input: String?): UniversalLinkResult {
+    fun build(input: String?, cleanLinks: Boolean = false): UniversalLinkResult {
         if (input.isNullOrBlank()) return failure(UniversalLinkFailure.EMPTY_INPUT)
 
         val service: MusicService
-        val sourceUrl: String
+        val originalUrl: String
         when (val parsed = MusicLinkParser.parse(input)) {
             is MusicLinkParseResult.Recognized -> {
                 if (parsed.link.contentType !in SHAREABLE_TYPES) {
                     return failure(UniversalLinkFailure.UNSUPPORTED_CONTENT)
                 }
                 service = parsed.link.service
-                sourceUrl = parsed.link.canonicalUrl
+                originalUrl = parsed.sourceUrl
             }
             is MusicLinkParseResult.Unsupported -> {
                 service = parsed.service ?: return failure(UniversalLinkFailure.UNSUPPORTED_SERVICE)
                 if (parsed.reason == UnsupportedReason.UNSUPPORTED_CONTENT_TYPE) {
                     return failure(UniversalLinkFailure.UNSUPPORTED_CONTENT)
                 }
-                sourceUrl = parsed.url
+                originalUrl = parsed.url
             }
             is MusicLinkParseResult.Invalid -> return failure(
                 when (parsed.reason) {
@@ -64,6 +69,7 @@ object UniversalLinkBuilder {
             )
         }
 
+        val sourceUrl = LinkCleaner.forOutbound(originalUrl, cleanLinks)
         val encoded = percentEncode(sourceUrl) ?: return failure(UniversalLinkFailure.INVALID_LINK)
         return UniversalLinkResult.Success(RESOLVE_URL + encoded, sourceUrl, service)
     }

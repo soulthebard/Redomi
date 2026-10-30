@@ -18,6 +18,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -49,7 +50,6 @@ import com.acszo.redomi.ui.nav.Pages.APPS_PAGE
 import com.acszo.redomi.ui.nav.Pages.LAYOUT_PAGE
 import com.acszo.redomi.ui.nav.Pages.UPDATE_PAGE
 import com.acszo.redomi.ui.theme.bottomItemShape
-import com.acszo.redomi.ui.theme.middleLargeItemShape
 import com.acszo.redomi.ui.theme.middleSmallItemShape
 import com.acszo.redomi.ui.theme.topItemShape
 import com.acszo.redomi.utils.ClipboardUtils.copyText
@@ -75,6 +75,7 @@ fun SettingsPage(
     val iconShape by dataStoreViewModel.iconShape.collectAsStateWithLifecycle()
     val themeMode by dataStoreViewModel.themeMode.collectAsStateWithLifecycle()
     val countryCode by dataStoreViewModel.countryCode.collectAsStateWithLifecycle()
+    val cleanLinks by dataStoreViewModel.cleanLinks.collectAsStateWithLifecycle()
 
     val redomi = stringResource(id = R.string.app_name)
 
@@ -153,9 +154,26 @@ fun SettingsPage(
                     icon = R.drawable.ic_world,
                     title = stringResource(id = R.string.country_code),
                     description = countryCode,
-                    itemShape = middleLargeItemShape
+                    itemShape = topItemShape
                 ) {
                     openCountryCodeDialog = true
+                }
+            }
+
+            item {
+                SettingsItem(
+                    icon = R.drawable.ic_link,
+                    title = stringResource(id = R.string.clean_links),
+                    description = stringResource(id = R.string.clean_links_description),
+                    itemShape = bottomItemShape,
+                    trailingItem = {
+                        Switch(
+                            checked = cleanLinks,
+                            onCheckedChange = null
+                        )
+                    }
+                ) {
+                    dataStoreViewModel.setCleanLinks(!cleanLinks)
                 }
             }
 

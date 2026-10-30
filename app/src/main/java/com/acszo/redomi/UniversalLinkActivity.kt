@@ -4,10 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import com.acszo.redomi.data.DataStoreConst.CLEAN_LINKS
+import com.acszo.redomi.data.SettingsDataStore
 import com.acszo.redomi.sharing.UniversalLinkBuilder
 import com.acszo.redomi.sharing.UniversalLinkFailure
 import com.acszo.redomi.sharing.UniversalLinkResult
 import com.acszo.redomi.utils.IntentUtil
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 class UniversalLinkActivity: ComponentActivity() {
 
@@ -15,8 +19,11 @@ class UniversalLinkActivity: ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val sharedText = intent?.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+        val cleanLinks = runCatching {
+            runBlocking { SettingsDataStore(applicationContext).getBoolean(CLEAN_LINKS).first() }
+        }.getOrNull() == true
 
-        when (val result = UniversalLinkBuilder.build(sharedText)) {
+        when (val result = UniversalLinkBuilder.build(sharedText, cleanLinks)) {
             is UniversalLinkResult.Success -> IntentUtil.onIntentSend(this@UniversalLinkActivity, result.universalUrl)
             is UniversalLinkResult.Failure -> {
                 val message = when (result.reason) {

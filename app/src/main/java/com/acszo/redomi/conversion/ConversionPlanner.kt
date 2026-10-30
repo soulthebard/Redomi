@@ -1,5 +1,6 @@
 package com.acszo.redomi.conversion
 
+import com.acszo.redomi.links.LinkCleaner
 import com.acszo.redomi.parser.InvalidReason
 import com.acszo.redomi.parser.MusicContentType
 import com.acszo.redomi.parser.MusicLinkParseResult
@@ -16,8 +17,12 @@ import com.acszo.redomi.sharing.UniversalLinkResult
  */
 object ConversionPlanner {
 
-    /** Plans from [input], a music URL or shared text containing one. */
-    fun plan(input: String?): ConversionPlanResult {
+    /**
+     * Plans from [input], a music URL or shared text containing one. With [cleanLinks] on, the URLs
+     * of the actions lose their known tracking parameters; [ConversionSource.originalUrl] never
+     * changes, so the link as received stays available.
+     */
+    fun plan(input: String?, cleanLinks: Boolean = false): ConversionPlanResult {
         if (input.isNullOrBlank()) return ConversionPlanResult.Invalid(InvalidReason.EMPTY_INPUT)
 
         return when (val parsed = MusicLinkParser.parse(input)) {
@@ -30,14 +35,14 @@ object ConversionPlanner {
                     originalUrl = parsed.sourceUrl,
                     normalizedUrl = link.canonicalUrl
                 )
-                plan(source, sameIdConversions(source))
+                plan(source, sameIdConversions(source), cleanLinks)
             }
-            is MusicLinkParseResult.Unsupported -> planUnsupported(parsed)
+            is MusicLinkParseResult.Unsupported -> planUnsupported(parsed, cleanLinks)
             is MusicLinkParseResult.Invalid -> ConversionPlanResult.Invalid(parsed.reason)
         }
     }
 
-    private fun planUnsupported(parsed: MusicLinkParseResult.Unsupported): ConversionPlanResult {
+    private fun planUnsupported(parsed: MusicLinkParseResult.Unsupported, cleanLinks: Boolean): ConversionPlanResult {
         val service = parsed.service
         return when {
             service == null -> ConversionPlanResult.Unsupported(
@@ -49,7 +54,8 @@ object ConversionPlanner {
             // A known service whose links are not parsed yet: keep the link as it is.
             else -> plan(
                 ConversionSource(service, contentType = null, id = null, originalUrl = parsed.url, normalizedUrl = null),
-                conversions = emptyList()
+                conversions = emptyList(),
+                cleanLinks = cleanLinks
             )
         }
     }
@@ -58,8 +64,12 @@ object ConversionPlanner {
      * Adds the universal resolver, which also decides whether the content is convertible at all,
      * so playlists, artists and the like never get actions.
      */
-    private fun plan(source: ConversionSource, conversions: List<ConversionAction>): ConversionPlanResult {
-        val universal = when (val result = UniversalLinkBuilder.build(source.originalUrl)) {
+    private fun plan(
+        source: ConversionSource,
+        conversions: List<ConversionAction>,
+        cleanLinks: Boolean
+    ): ConversionPlanResult {
+        val universal = when (val result = UniversalLinkBuilder.build(source.originalUrl, cleanLinks)) {
             is UniversalLinkResult.Success -> result
             is UniversalLinkResult.Failure -> return when (result.reason) {
                 UniversalLinkFailure.UNSUPPORTED_CONTENT -> ConversionPlanResult.Unsupported(
@@ -73,7 +83,7 @@ object ConversionPlanner {
         }
 
         val actions = buildList {
-            add(ConversionAction.Original(source.service, source.originalUrl))
+            add(ConversionAction.Original(source.service, LinkCleaner.forOutbound(source.originalUrl, cleanLinks)))
             addAll(conversions)
             add(ConversionAction.UniversalResolver(universal.universalUrl))
             // Only YouTube and YouTube Music share identifiers; everything else would need a lookup.

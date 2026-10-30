@@ -69,7 +69,7 @@ class ConversionPlannerTest {
             listOf(
                 Original(MusicService.YOUTUBE, "https://www.youtube.com/watch?v=$videoId&t=42s"),
                 SameIdConversion(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId"),
-                UniversalResolver("${resolve}https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D$videoId")
+                UniversalResolver("${resolve}https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D$videoId%26t%3D42s")
             ),
             plan.actions
         )
@@ -86,7 +86,7 @@ class ConversionPlannerTest {
             listOf(
                 Original(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId&si=abc"),
                 SameIdConversion(MusicService.YOUTUBE, "https://www.youtube.com/watch?v=$videoId"),
-                UniversalResolver("${resolve}https%3A%2F%2Fmusic.youtube.com%2Fwatch%3Fv%3D$videoId")
+                UniversalResolver("${resolve}https%3A%2F%2Fmusic.youtube.com%2Fwatch%3Fv%3D$videoId%26si%3Dabc")
             ),
             plan.actions
         )
@@ -148,7 +148,7 @@ class ConversionPlannerTest {
         assertEquals(
             listOf(
                 Original(MusicService.SPOTIFY, original),
-                UniversalResolver("${resolve}https%3A%2F%2Fopen.spotify.com%2Ftrack%2F$spotifyTrackId")
+                UniversalResolver("${resolve}https%3A%2F%2Fopen.spotify.com%2Ftrack%2F$spotifyTrackId%3Fsi%3D0123456789abcdef")
             ) + unavailableYouTube,
             plan.actions
         )
@@ -196,14 +196,42 @@ class ConversionPlannerTest {
     }
 
     @Test
-    fun originalParametersArePreservedWhileNormalizedAndUniversalLinksDropThem() {
+    fun originalParametersAreKeptEverywhereWhenCleanLinksIsOff() {
         val original = "https://open.spotify.com/track/$spotifyTrackId?si=0123456789abcdef"
         val plan = planned("Check this out: $original ok?")
 
         assertEquals(original, plan.source.originalUrl)
         assertEquals(original, (plan.actions.first() as Original).url)
-        assertFalse(plan.source.normalizedUrl!!.contains("si="))
-        assertFalse(urlOf(plan.actions[1])!!.contains("%3Fsi%3D"))
+        assertTrue(urlOf(plan.actions[1])!!.contains("%3Fsi%3D"))
+        // only the normalized form drops the parameter
+        assertEquals("https://open.spotify.com/track/$spotifyTrackId", plan.source.normalizedUrl)
+    }
+
+    @Test
+    fun cleanLinksCleansActionUrlsButKeepsTheOriginalForDiagnostics() {
+        val original = "https://open.spotify.com/track/$spotifyTrackId?si=0123456789abcdef&utm_source=copy-link"
+        val plan = (ConversionPlanner.plan(original, cleanLinks = true) as Planned)
+
+        assertEquals(original, plan.source.originalUrl)
+        assertEquals(
+            listOf(
+                Original(MusicService.SPOTIFY, "https://open.spotify.com/track/$spotifyTrackId"),
+                UniversalResolver("${resolve}https%3A%2F%2Fopen.spotify.com%2Ftrack%2F$spotifyTrackId")
+            ) + unavailableYouTube,
+            plan.actions
+        )
+    }
+
+    @Test
+    fun cleanLinksKeepsContentParametersOfYouTubeLinks() {
+        val plan = ConversionPlanner.plan("https://www.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&t=42s&si=abc", cleanLinks = true) as Planned
+
+        assertEquals("https://www.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&t=42s", (plan.actions.first() as Original).url)
+        // the same-ID conversion carries only the video, as before
+        assertEquals(
+            SameIdConversion(MusicService.YOUTUBE_MUSIC, "https://music.youtube.com/watch?v=$videoId"),
+            plan.actions[1]
+        )
     }
 
     // Other Redomi services

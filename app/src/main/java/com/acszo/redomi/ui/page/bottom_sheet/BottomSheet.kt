@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.acszo.redomi.data.ListOrientation
+import com.acszo.redomi.links.LinkCleaner
 import com.acszo.redomi.ui.common.enterFadeInTransition
 import com.acszo.redomi.ui.page.bottom_sheet.components.ActionsMenu
 import com.acszo.redomi.ui.page.bottom_sheet.components.AppsList
@@ -40,6 +41,7 @@ fun BottomSheet(
     iconShape: Shape,
     listOrientation: ListOrientation,
     gridSize: Int,
+    cleanLinks: Boolean = false,
     refresh: () -> Unit
 ) {
     val context = LocalContext.current
@@ -92,7 +94,7 @@ fun BottomSheet(
                             gridSize = gridSize,
                             onClick = { song ->
                                 if (!isActionSend) {
-                                    onIntentView(context, song.link)
+                                    onIntentView(context, LinkCleaner.forOutbound(song.link, cleanLinks))
                                 } else {
                                     showActionsMenu = true
                                     selectedSong = song
@@ -106,7 +108,7 @@ fun BottomSheet(
                         enter = enterFadeInTransition(),
                     ) {
                         if (isActionSend) {
-                            ActionsMenu(url = selectedSong.link) {
+                            ActionsMenu(url = LinkCleaner.forOutbound(selectedSong.link, cleanLinks)) {
                                 onDismiss()
                             }
                         } else {
@@ -114,7 +116,7 @@ fun BottomSheet(
                                 modifier = Modifier.height(200.dp),
                             ) {
                                 LaunchedEffect(Unit) {
-                                    onIntentView(context, selectedSong.link)
+                                    onIntentView(context, LinkCleaner.forOutbound(selectedSong.link, cleanLinks))
                                     onDismiss()
                                 }
                             }

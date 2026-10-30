@@ -53,6 +53,7 @@ class ConvertSongActivity : ComponentActivity() {
             val iconShape by dataStoreViewModel.iconShape.collectAsStateWithLifecycle()
             val listOrientation by dataStoreViewModel.listOrientation.collectAsStateWithLifecycle()
             val gridSize by dataStoreViewModel.gridSize.collectAsStateWithLifecycle()
+            val cleanLinks by dataStoreViewModel.cleanLinks.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
                 if (!bottomSheetUiState.isLoaded)
@@ -74,6 +75,7 @@ class ConvertSongActivity : ComponentActivity() {
                     iconShape = IconShape.entries[iconShape].shape,
                     listOrientation = ListOrientation.entries[listOrientation],
                     gridSize = gridSize,
+                    cleanLinks = cleanLinks,
                     refresh = { songLinkViewModel.refresh(intentData, appList.key, countryCode) }
                 )
             }

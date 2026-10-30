@@ -48,13 +48,33 @@ class UniversalLinkBuilderTest {
     }
 
     @Test
-    fun spotifyTrackingParametersAreDropped() {
-        val result = success("https://open.spotify.com/intl-de/track/$spotifyTrackId?si=0123456789abcdef&utm_source=copy-link")
-        assertEquals("https://open.spotify.com/track/$spotifyTrackId", result.sourceUrl)
+    fun spotifyParametersArePreservedWhenCleanLinksIsOff() {
+        val input = "https://open.spotify.com/intl-de/track/$spotifyTrackId?si=0123456789abcdef&utm_source=copy-link"
+        val result = success(input)
+        assertEquals(input, result.sourceUrl)
         assertEquals(
-            "${prefix}https%3A%2F%2Fopen.spotify.com%2Ftrack%2F$spotifyTrackId",
+            "${prefix}https%3A%2F%2Fopen.spotify.com%2Fintl-de%2Ftrack%2F$spotifyTrackId%3Fsi%3D0123456789abcdef%26utm_source%3Dcopy-link",
             result.universalUrl
         )
+    }
+
+    @Test
+    fun spotifyTrackingParametersAreRemovedWhenCleanLinksIsOn() {
+        val result = UniversalLinkBuilder.build(
+            "https://open.spotify.com/intl-de/track/$spotifyTrackId?si=0123456789abcdef&utm_source=copy-link",
+            cleanLinks = true
+        ) as Success
+        assertEquals("https://open.spotify.com/intl-de/track/$spotifyTrackId", result.sourceUrl)
+        assertEquals(
+            "${prefix}https%3A%2F%2Fopen.spotify.com%2Fintl-de%2Ftrack%2F$spotifyTrackId",
+            result.universalUrl
+        )
+    }
+
+    @Test
+    fun cleanLinksIsOffByDefault() {
+        val input = "https://open.spotify.com/track/$spotifyTrackId?si=abc"
+        assertEquals(UniversalLinkBuilder.build(input, cleanLinks = false), UniversalLinkBuilder.build(input))
     }
 
     @Test
@@ -66,27 +86,72 @@ class UniversalLinkBuilderTest {
     }
 
     @Test
-    fun youtubeWatchAndShortLinkProduceTheSameUniversalLink() {
-        val expected = "${prefix}https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D$videoId"
-        assertEquals(expected, success("https://www.youtube.com/watch?v=$videoId&t=42s&si=abc").universalUrl)
-        assertEquals(expected, success("https://youtu.be/$videoId?si=abc").universalUrl)
-        assertEquals(expected, success("https://m.youtube.com/watch?v=$videoId").universalUrl)
+    fun youtubeLinksKeepTheirFormAndParametersWhenCleanLinksIsOff() {
+        assertEquals(
+            "${prefix}https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D$videoId%26t%3D42s%26si%3Dabc",
+            success("https://www.youtube.com/watch?v=$videoId&t=42s&si=abc").universalUrl
+        )
+        assertEquals(
+            "${prefix}https%3A%2F%2Fyoutu.be%2F$videoId%3Fsi%3Dabc",
+            success("https://youtu.be/$videoId?si=abc").universalUrl
+        )
     }
 
     @Test
-    fun youtubeMusicKeepsItsHostInsteadOfBecomingAYouTubeLink() {
-        val result = success("https://music.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&si=abc")
+    fun youtubeCleaningKeepsVideoAndTimestampButDropsSi() {
+        fun clean(input: String) = (UniversalLinkBuilder.build(input, cleanLinks = true) as Success).universalUrl
+
         assertEquals(
-            "${prefix}https%3A%2F%2Fmusic.youtube.com%2Fwatch%3Fv%3D$videoId",
-            result.universalUrl
+            "${prefix}https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D$videoId%26t%3D42s",
+            clean("https://www.youtube.com/watch?v=$videoId&t=42s&si=abc")
         )
-        assertEquals(MusicService.YOUTUBE_MUSIC, result.service)
+        assertEquals("${prefix}https%3A%2F%2Fyoutu.be%2F$videoId", clean("https://youtu.be/$videoId?si=abc"))
+    }
+
+    @Test
+    fun youtubeMusicKeepsItsHostAndListParameter() {
+        val input = "https://music.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&si=abc"
+
+        val off = success(input)
+        assertEquals(input, off.sourceUrl)
+        assertEquals(MusicService.YOUTUBE_MUSIC, off.service)
+
+        val on = UniversalLinkBuilder.build(input, cleanLinks = true) as Success
+        assertEquals(
+            "${prefix}https%3A%2F%2Fmusic.youtube.com%2Fwatch%3Fv%3D$videoId%26list%3DRDAMVM$videoId",
+            on.universalUrl
+        )
     }
 
     @Test
     fun linkInsideSharedText() {
-        val result = success("Listen to this on Spotify!\nhttps://open.spotify.com/track/$spotifyTrackId?si=abc\nEnjoy.")
-        assertEquals("https://open.spotify.com/track/$spotifyTrackId", result.sourceUrl)
+        val text = "Listen to this on Spotify!\nhttps://open.spotify.com/track/$spotifyTrackId?si=abc\nEnjoy."
+        assertEquals("https://open.spotify.com/track/$spotifyTrackId?si=abc", success(text).sourceUrl)
+        assertEquals(
+            "https://open.spotify.com/track/$spotifyTrackId",
+            (UniversalLinkBuilder.build(text, cleanLinks = true) as Success).sourceUrl
+        )
+    }
+
+    @Test
+    fun cleaningHappensBeforeEncodingAndTheEncodingIsStillSingle() {
+        val input = "https://music.apple.com/us/album/a%20b/1558533900?i=1558534271&uo=4&utm_source=x"
+        val result = UniversalLinkBuilder.build(input, cleanLinks = true) as Success
+
+        assertEquals("https://music.apple.com/us/album/a%20b/1558533900?i=1558534271", result.sourceUrl)
+        assertTrue(result.universalUrl, result.universalUrl.contains("a%2520b"))
+        assertFalse(result.universalUrl, result.universalUrl.contains("%252520"))
+        assertEquals(result.sourceUrl, decodedQuery(result.universalUrl))
+        // the outer q parameter is still the only query
+        assertEquals(1, result.universalUrl.count { it == '?' })
+        assertTrue(result.universalUrl.startsWith(prefix))
+    }
+
+    @Test
+    fun cleaningNeverTurnsAShortLinkIntoAGuess() {
+        val input = "https://spotify.link/AbCdEfG?utm_source=x"
+        val result = UniversalLinkBuilder.build(input, cleanLinks = true)
+        assertEquals(UniversalLinkFailure.UNSUPPORTED_SERVICE, (result as Failure).reason)
     }
 
     @Test

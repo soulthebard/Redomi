@@ -45,6 +45,8 @@
     <string name="dialog_setup_description_checked">Check the links so %s can open them correctly.</string>
     <string name="dialog_setup_description_unchecked">Leave unchecked the ones that are from music services you use. (e.g. if you use Spotify leave it unchecked)</string>
     <string name="update_info_failed">Couldn\'t load update info</string>
+    <string name="clean_links">Clean Links</string>
+    <string name="clean_links_description">Remove known tracking parameters from music links you open, copy or share</string>
     <string name="error_incorrect_url">The given url is incorrect</string>
     <string name="error_unsupported_link">This link can\'t be shared as a universal link</string>
     <string name="error_no_internet_connection">No internet connection</string>

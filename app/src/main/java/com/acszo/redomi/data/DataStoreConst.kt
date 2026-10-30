@@ -21,6 +21,7 @@ object DataStoreConst {
     const val ICON_SHAPE = "icon_shape"
     const val THEME_MODE = "theme_mode"
     const val COUNTRY_CODE = "country_code"
+    const val CLEAN_LINKS = "clean_links"
 
     const val SMALL_GRID = 2
     const val MEDIUM_GRID = 3

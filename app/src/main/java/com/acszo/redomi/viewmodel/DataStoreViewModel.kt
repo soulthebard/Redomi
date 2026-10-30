@@ -2,6 +2,7 @@ package com.acszo.redomi.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.acszo.redomi.data.DataStoreConst.CLEAN_LINKS
 import com.acszo.redomi.data.DataStoreConst.COUNTRY_CODE
 import com.acszo.redomi.data.DataStoreConst.DEFAULT_COUNTRY_CODE
 import com.acszo.redomi.data.DataStoreConst.FIRST_TIME
@@ -54,6 +55,9 @@ class DataStoreViewModel @Inject constructor(
     private val _countryCode = MutableStateFlow(DEFAULT_COUNTRY_CODE)
     val countryCode = _countryCode.asStateFlow()
 
+    private val _cleanLinks = MutableStateFlow(false)
+    val cleanLinks = _cleanLinks.asStateFlow()
+
     init {
         viewModelScope.launch {
             settingsDataStore.getInt(LIST_ORIENTATION).collectLatest {
@@ -82,6 +86,12 @@ class DataStoreViewModel @Inject constructor(
         viewModelScope.launch {
             settingsDataStore.getString(COUNTRY_CODE).collectLatest {
                 _countryCode.value = it ?: DEFAULT_COUNTRY_CODE
+            }
+        }
+
+        viewModelScope.launch {
+            settingsDataStore.getBoolean(CLEAN_LINKS).collectLatest {
+                _cleanLinks.value = it == true
             }
         }
     }
@@ -138,6 +148,10 @@ class DataStoreViewModel @Inject constructor(
 
     fun setCountryCode(countryCode: String) = viewModelScope.launch {
         settingsDataStore.setString(COUNTRY_CODE, countryCode)
+    }
+
+    fun setCleanLinks(cleanLinks: Boolean) = viewModelScope.launch {
+        settingsDataStore.setBoolean(CLEAN_LINKS, cleanLinks)
     }
 
 }
