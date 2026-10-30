@@ -109,6 +109,39 @@ class UniversalLinkBuilderTest {
     }
 
     @Test
+    fun youtubeIsParameterIsKeptWhenCleanLinksIsOff() {
+        val input = "https://youtu.be/xCUUItmmDDc?t=58&is=edqQ_EaMEl-eeORJ"
+        val result = success(input)
+
+        assertEquals(input, result.sourceUrl)
+        assertEquals(
+            "${prefix}https%3A%2F%2Fyoutu.be%2FxCUUItmmDDc%3Ft%3D58%26is%3DedqQ_EaMEl-eeORJ",
+            result.universalUrl
+        )
+    }
+
+    @Test
+    fun youtubeIsParameterIsRemovedWhenCleanLinksIsOn() {
+        val result = UniversalLinkBuilder.build(
+            "https://youtu.be/xCUUItmmDDc?t=58&is=edqQ_EaMEl-eeORJ",
+            cleanLinks = true
+        ) as Success
+
+        assertEquals("https://youtu.be/xCUUItmmDDc?t=58", result.sourceUrl)
+        assertEquals("${prefix}https%3A%2F%2Fyoutu.be%2FxCUUItmmDDc%3Ft%3D58", result.universalUrl)
+    }
+
+    @Test
+    fun isParameterOfOtherServicesSurvivesCleanLinks() {
+        val result = UniversalLinkBuilder.build(
+            "https://open.spotify.com/track/$spotifyTrackId?is=keep&si=abc",
+            cleanLinks = true
+        ) as Success
+
+        assertEquals("https://open.spotify.com/track/$spotifyTrackId?is=keep", result.sourceUrl)
+    }
+
+    @Test
     fun youtubeMusicKeepsItsHostAndListParameter() {
         val input = "https://music.youtube.com/watch?v=$videoId&list=RDAMVM$videoId&si=abc"
 

@@ -84,7 +84,8 @@ object LinkCleaner {
 
         return when (service) {
             MusicService.SPOTIFY, MusicService.SOUNDCLOUD -> key == "si"
-            MusicService.YOUTUBE, MusicService.YOUTUBE_MUSIC -> key == "si" || key == "feature"
+            // YouTube's share sheet now writes the same tracking token as `is` instead of `si`.
+            MusicService.YOUTUBE, MusicService.YOUTUBE_MUSIC -> key == "si" || key == "is" || key == "feature"
             MusicService.APPLE_MUSIC -> key in APPLE_MUSIC_TRACKING
             // Amazon's share sheet tags links with ref=dm_sh_...; other ref values are left alone.
             MusicService.AMAZON_MUSIC -> key == "ref" && value.startsWith("dm_sh_")

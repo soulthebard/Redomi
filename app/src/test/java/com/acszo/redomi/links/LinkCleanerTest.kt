@@ -83,6 +83,85 @@ class LinkCleanerTest {
         assertCleaned("https://youtu.be/$videoId", "https://youtu.be/$videoId?si=abc&feature=youtu.be")
     }
 
+    // YouTube's `is` tracking parameter (the successor of `si` in share links)
+
+    @Test
+    fun youtubeIsAloneIsRemoved() {
+        assertCleaned("https://youtu.be/$videoId", "https://youtu.be/$videoId?is=edqQ_EaMEl-eeORJ")
+        assertCleaned(
+            "https://www.youtube.com/watch?v=$videoId",
+            "https://www.youtube.com/watch?v=$videoId&is=edqQ_EaMEl-eeORJ"
+        )
+    }
+
+    @Test
+    fun youtubeIsIsRemovedAndTheTimestampStays() {
+        assertCleaned("https://youtu.be/xCUUItmmDDc?t=58", "https://youtu.be/xCUUItmmDDc?t=58&is=edqQ_EaMEl-eeORJ")
+    }
+
+    @Test
+    fun youtubeIsIsRemovedBeforeBetweenAndAfterFunctionalParameters() {
+        val expected = "https://www.youtube.com/watch?v=$videoId&list=$ytPlaylistId&index=2&t=42s"
+        assertCleaned(expected, "https://www.youtube.com/watch?is=abc&v=$videoId&list=$ytPlaylistId&index=2&t=42s")
+        assertCleaned(expected, "https://www.youtube.com/watch?v=$videoId&list=$ytPlaylistId&is=abc&index=2&t=42s")
+        assertCleaned(expected, "https://www.youtube.com/watch?v=$videoId&list=$ytPlaylistId&index=2&t=42s&is=abc")
+    }
+
+    @Test
+    fun repeatedYoutubeIsParametersAreAllRemoved() {
+        assertCleaned("https://youtu.be/$videoId?t=58", "https://youtu.be/$videoId?is=a&t=58&is=b&is=c")
+        assertCleaned("https://youtu.be/$videoId", "https://youtu.be/$videoId?is=a&si=b&is=c")
+    }
+
+    @Test
+    fun youtubeIsOnlyMatchesTheExactParameterName() {
+        assertUntouched("https://youtu.be/$videoId?t=58&is_live=1&this=2&IS=3&isx=4")
+    }
+
+    @Test
+    fun youtubeMusicIsIsRemovedToo() {
+        assertCleaned(
+            "https://music.youtube.com/watch?v=$videoId&list=RDAMVM$videoId",
+            "https://music.youtube.com/watch?v=$videoId&is=abc&list=RDAMVM$videoId"
+        )
+        assertCleaned(
+            "https://music.youtube.com/playlist?list=$ytPlaylistId",
+            "https://music.youtube.com/playlist?list=$ytPlaylistId&is=abc"
+        )
+    }
+
+    @Test
+    fun youtubeIsIsKeptOnPagesThatAreNotCleaned() {
+        assertUntouched("https://www.youtube.com/redirect?q=https%3A%2F%2Fexample.com%2F&is=abc")
+        assertUntouched("https://www.youtube.com/results?search_query=rick&is=abc")
+        assertUntouched("https://www.youtube.com/watch?is=abc")
+        assertUntouched("https://youtu.be.evil.example/$videoId?is=abc")
+    }
+
+    @Test
+    fun isIsKeptOnEveryOtherService() {
+        listOf(
+            "https://open.spotify.com/track/$spotifyId?is=keep",
+            "https://music.apple.com/us/album/x/1558533900?i=1558534271&is=keep",
+            "https://soundcloud.com/artist/track?is=keep",
+            "https://music.amazon.com/albums/B000000000?trackAsin=B000000001&is=keep",
+            "https://www.deezer.com/track/3135556?is=keep",
+            "https://tidal.com/browse/track/1234567?is=keep",
+            "https://music.yandex.ru/track/609676?is=keep",
+            "https://play.anghami.com/song/106295734?is=keep",
+            "https://play.napster.com/track/tra.416878691?is=keep"
+        ).forEach { assertUntouched(it) }
+    }
+
+    @Test
+    fun isIsKeptWhileOtherTrackingIsRemovedOnOtherServices() {
+        assertCleaned("https://open.spotify.com/track/$spotifyId?is=keep", "https://open.spotify.com/track/$spotifyId?is=keep&si=abc")
+        assertCleaned(
+            "https://music.apple.com/us/album/x/1558533900?i=1558534271&is=keep",
+            "https://music.apple.com/us/album/x/1558533900?i=1558534271&is=keep&uo=4"
+        )
+    }
+
     @Test
     fun youtubeShortsAndEmbedAreCleaned() {
         assertCleaned("https://www.youtube.com/shorts/$videoId", "https://www.youtube.com/shorts/$videoId?si=abc")
